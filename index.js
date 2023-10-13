@@ -1,51 +1,17 @@
-const express = require('express')
-const fs = require('fs')
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
 
-const app = express()
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
 
-app.use(express.static('./videos'))
-
-const videoFileMap = {
-    'cdn':'videos/cdn.mp4',
-    'generate-pass':'videos/generate-pass.mp4',
-    'get-post':'videos/get-post.mp4'
-}
-
-app.get('/videos/:filename',(req,res)=>{
-    const fileName = req.params.filename;
-    const filePath = videoFileMap[fileName]
-    if(!filePath){
-        return res.status(404).send('File not found')
-    }
-
-    const stat = fs.statSync(filePath)
-    const fileSize = stat.size
-    const range = req.headers.range
-    console.log(range)
-    if(range){
-        const parts = range.replace(/bytes=/,'').split('-')
-        const start = parseInt(parts[0],10)
-        const end = parts[1]?parseInt(parts[1],10):fileSize-1
-
-        const chunksize = end - start + 1;
-        const file = fs.createReadStream(filePath,{start,end})
-        const head = {
-            'Content-Range':`bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges':'bytes',
-            'Content-Length':chunksize,
-            'Content-Type':'video/mp4'
-        }
-        res.writeHead(206,head)
-        file.pipe(res)
-    }
-    else{
-        const head = {
-            'Content-Length':fileSize,
-            'Content-Type':'video/mp4'
-        }
-        res.writeHead(200,head)
-        fs.createReadStream(filePath).pipe(res)
-    }
-})
-
-app.listen(4000)
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
